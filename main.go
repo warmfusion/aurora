@@ -102,10 +102,6 @@ func (a *Animation) Next() (image.Image, <-chan time.Time, error) {
 		y = float64(a.ctx.Height()/2) - y
 
 		/* color a pixel at the given position */
-		a.ctx.DrawCircle(float64(x), float64((y/10)+16), 2.0)
-		a.ctx.SetColor(colorful.Hsv(0, 0.56, 0.0))
-		a.ctx.Fill()
-
 		a.ctx.DrawCircle(float64(x), float64((y/10)+16), 1.0)
 		a.ctx.SetColor(colorful.Hsv(float64((c+x)%360), 0.56, 0.5))
 		a.ctx.Fill()
