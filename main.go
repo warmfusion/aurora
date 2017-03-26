@@ -4,35 +4,21 @@ import (
 	"flag"
 	"image"
 	"image/color"
-	"math"
 	"time"
 
 	"github.com/fogleman/gg"
+	"github.com/lucasb-eyer/go-colorful"
 	"github.com/mcuadros/go-rpi-rgb-led-matrix"
 )
 
 var (
-	rows       = flag.Int("led-rows", 32, "number of rows supported")
-	parallel   = flag.Int("led-parallel", 1, "number of daisy-chained panels")
-	chain      = flag.Int("led-chain", 2, "number of displays daisy-chained")
-	brightness = flag.Int("brightness", 100, "brightness (0-100)")
+	rows         = flag.Int("led-rows", 32, "number of rows supported")
+	parallel     = flag.Int("led-parallel", 1, "number of daisy-chained panels")
+	chain        = flag.Int("led-chain", 2, "number of displays daisy-chained")
+	brightness   = flag.Int("brightness", 100, "brightness (0-100)")
+	steps        = flag.Int("steps", 20, "brightness (0-100)")
+	frameCounter = 0
 )
-
-
-type Circle struct {
-	X, Y, R float64
-}
-
-func (c *Circle) Brightness(x, y float64) uint8 {
-	var dx, dy float64 = c.X - x, c.Y - y
-	d := math.Sqrt(dx*dx+dy*dy) / c.R
-	if d > 1 {
-		return 127
-	} else {
-		return 255
-	}
-}
-
 
 func main() {
 	config := &rgbmatrix.DefaultConfig
@@ -51,19 +37,15 @@ func main() {
 	tk.PlayAnimation(NewAnimation(image.Point{64, 32}))
 }
 
-
 func init() {
 	flag.Parse()
 }
-
-
 
 func fatal(err error) {
 	if err != nil {
 		panic(err)
 	}
 }
-
 
 type Animation struct {
 	ctx      *gg.Context
@@ -72,57 +54,30 @@ type Animation struct {
 	stroke   int
 }
 
-
 func NewAnimation(sz image.Point) *Animation {
 	return &Animation{
 		ctx:    gg.NewContext(sz.X, sz.Y),
 		dir:    image.Point{1, 1},
-		stroke: 5,
+		stroke: 10,
 	}
 }
 
-
 func (a *Animation) Next() (image.Image, <-chan time.Time, error) {
-
 
 	a.ctx.SetColor(color.Black)
 	a.ctx.Clear()
 
+	a.ctx.DrawCircle(30.0, 10.0, float64(a.stroke))
+	a.ctx.SetColor(colorful.Hsv(216.0, 0.56, 0.3))
+	a.ctx.Fill()
 
-	w := a.ctx.Width()
-	h := a.ctx.Height()
+	a.ctx.DrawCircle(40.0, 10.0, float64(a.stroke))
+	a.ctx.SetColor(colorful.Hsv(90.0, 0.56, 0.3))
+	a.ctx.Fill()
 
-
-
-	var hw, hh float64 = float64(w / 2), float64(h / 2)
-	circles := []*Circle{&Circle{}, &Circle{}, &Circle{}}
-	steps := 20
-	step :=0
-
-	step += 1 
-	step %= steps
-
-	θ := 2.0 * math.Pi / float64(steps) * float64(step)
-	for i, circle := range circles {
-		θ0 := 2 * math.Pi / 3 * float64(i)
-		circle.X = hw - 40*math.Sin(θ0) - 20*math.Sin(θ0+θ)
-		circle.Y = hh - 40*math.Cos(θ0) - 20*math.Cos(θ0+θ)
-		circle.R = 50
-	}
-	
-	for x := 0; x < w; x++ {
-		for y := 0; y < h; y++ {
-			a.ctx.SetColor(color.RGBA{
-                                circles[0].Brightness(float64(x), float64(y)),
-                                circles[1].Brightness(float64(x), float64(y)),
-                                circles[2].Brightness(float64(x), float64(y)),
-                                255,
-                        })
-			a.ctx.DrawCircle(float64(x),float64(y),1.0)
-		}
-	}
+	a.ctx.DrawCircle(30.0, 20.0, float64(a.stroke))
+	a.ctx.SetColor(colorful.Hsv(170.0, 0.56, 0.3))
+	a.ctx.Fill()
 
 	return a.ctx.Image(), time.After(time.Millisecond * 50), nil
-
 }
-
