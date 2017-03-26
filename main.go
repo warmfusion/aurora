@@ -46,19 +46,19 @@ func fatal(err error) {
 }
 
 type Animation struct {
-	ctx      *gg.Context
-	position image.Point
-	dir      image.Point
-	steps    int
-	stroke   int
+	ctx          *gg.Context
+	position     image.Point
+	dir          image.Point
+	frameCounter int
+	stroke       int
 }
 
 func NewAnimation(sz image.Point) *Animation {
 	return &Animation{
-		ctx:    gg.NewContext(sz.X, sz.Y),
-		dir:    image.Point{1, 1},
-		steps:  0,
-		stroke: 10,
+		ctx:          gg.NewContext(sz.X, sz.Y),
+		dir:          image.Point{1, 1},
+		frameCounter: 0,
+		stroke:       10,
 	}
 }
 
@@ -67,8 +67,8 @@ func (a *Animation) Next() (image.Image, <-chan time.Time, error) {
 	a.ctx.SetColor(color.Black)
 	a.ctx.Clear()
 
-	a.steps += 20
-	c := a.steps % 360
+	a.frameCounter += 20
+	c := a.frameCounter % 360
 
 	a.ctx.DrawCircle(30, 10.0, float64(a.stroke))
 	a.ctx.SetColor(colorful.Hsv(float64(c), 0.56, 0.3))
