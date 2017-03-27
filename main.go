@@ -17,7 +17,7 @@ var (
 	parallel   = flag.Int("led-parallel", 1, "number of daisy-chained panels")
 	chain      = flag.Int("led-chain", 2, "number of displays daisy-chained")
 	brightness = flag.Int("brightness", 100, "brightness (0-100)")
-	maxSparks  = flag.Int("max-sparks", 100, "sparks (0-100)")
+	maxSparks  = flag.Int("max-sparks", 30, "sparks (0-100)")
 	sparks     = make([]Spark, *maxSparks) // the slice v now refers to a new array of 100 ints
 )
 
@@ -73,8 +73,8 @@ func NewAnimation(sz image.Point) *Animation {
 	for i := range sparks {
 		sparks[i] = Spark{
 			position:  SparkPoint{32, 16},
-			radius:    3.0,
-			color:     colorful.Hsv(rand.Float64()*360, 0.56, 0.3),
+			radius:    5.0,
+			color:     colorful.Hsv(rand.Float64()*360, 0.56, 0.7),
 			direction: SparkPoint{(rand.Float64() * 2) - 1, (rand.Float64() * 2) - 1},
 		}
 	}
@@ -89,7 +89,6 @@ func NewAnimation(sz image.Point) *Animation {
 func (a *Animation) Next() (image.Image, <-chan time.Time, error) {
 
 	a.frameCounter++
-	c := a.frameCounter % 360
 
 	// Restart
 	a.ctx.SetColor(color.Black)
@@ -102,12 +101,25 @@ func (a *Animation) Next() (image.Image, <-chan time.Time, error) {
 		// Linear movement for now
 		spark.position.X += spark.direction.X
 		spark.position.Y += spark.direction.Y
+		spark.radius = spark.radius * 0.9
+
+		// "Gravity"
+		if spark.direction.Y < 0 {
+			spark.direction.Y -= spark.direction.Y * 0.1
+		} else {
+			spark.direction.Y += spark.direction.Y * 0.1
+		}
+		if spark.direction.Y > 4 {
+			spark.direction.Y = 4
+		}
 
 		a.ctx.SetColor(spark.color)
 		a.ctx.DrawCircle(spark.position.X, spark.position.Y, float64(spark.radius))
 		a.ctx.Fill()
 	}
 	/*
+		c := a.frameCounter % 360
+
 		a.ctx.SetColor(colorful.Hsv(float64(c), 0.56, 0.3))
 		a.ctx.DrawCircle(25, 5.0, float64(a.stroke))
 		a.ctx.Fill()
@@ -128,5 +140,6 @@ func (a *Animation) Next() (image.Image, <-chan time.Time, error) {
 		a.ctx.DrawCircle(45, 25.0, float64(a.stroke))
 		a.ctx.Fill()
 	*/
+	// Target 20fps... optimistic with this code
 	return a.ctx.Image(), time.After(time.Millisecond * 50), nil
 }
